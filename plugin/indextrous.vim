@@ -8,50 +8,44 @@ cnoremap <expr> / getcmdtype() == '/' ? '\/' : '/'
 
 " Smart search highlighting
 " Enable highlighting before any search
-Map n <silent> *   *:call AfterSearch()<CR>
-Map n <silent> #   #:call AfterSearch()<CR>
-Map n <silent> n   n:call AfterSearch()<CR>
-Map n <silent> N   N:call AfterSearch()<CR>
-Map n <silent> g* g*:call AfterSearch()<CR>
-Map n <silent> g# g#:call AfterSearch()<CR>
+nnoremap <silent> *   *:call <SID>after_search()<CR>
+nnoremap <silent> #   #:call <SID>after_search()<CR>
+nnoremap <silent> n   n:call <SID>after_search()<CR>
+nnoremap <silent> N   N:call <SID>after_search()<CR>
+nnoremap <silent> g* g*:call <SID>after_search()<CR>
+nnoremap <silent> g# g#:call <SID>after_search()<CR>
 
-augroup NoHlSearch
-augroup END
-augroup HlSearch
-augroup END
-
-
-function! AfterSearch()
-	let &hlsearch = strlen(substitute(@/, '\\zs', '', 'g')) > 1
-
-	" Disable auto-highlighting when switching to another mode
-	autocmd HlSearch InsertEnter,CursorHold * call SetHlSearch(1)
-
-	normal! mm
-
+function! s:after_search()
+	if g:last_cmd_type ==# ':'
+		return
+	endif
 	let after  = CountMatches(@/ . "\\%>'m")
 	let before = CountMatches(@/ . "\\%<'m")
+	call SetHlSearch(after + before < line('$'))
 	call ReportMatches(before + 1, before + after)
-
-	normal! `m
 endfunction
 
 function! SetHlSearch(val)
 	let &hlsearch = a:val
-	autocmd! NoHlSearch
-	autocmd! HlSearch
-	if &hlsearch
-		autocmd NoHlSearch InsertEnter,CursorHold * call SetHlSearch(0)
-	endif
+	augroup Indextrous
+		autocmd! Indextrous
+		if &hlsearch
+			" Disable auto-highlighting when switching to another mode
+			autocmd InsertEnter,CursorMoved * call SetHlSearch(0)
+		endif
+	augroup END
 endfunction
+
 function! CountMatches(pattern)
 	let save = @/
 	let @/ = a:pattern
+	normal! mm
 
 	redir => _
 	silent %s//&/gen
 	redir END
 
+	normal! `m
 	let @/ = save
 	return str2nr(_[1:])
 endfunction
@@ -75,40 +69,49 @@ function! Ordinal(n)
 				\ a:n % 10 == 3 ? 'rd' : 'th')
 endfunction
 
+function! CommandLineEnter(type)
+	let g:last_cmd_type = a:type
+	call SetHlSearch(0)
+endfunction
+
+cnoremap <CR> <CR>:call <SID>after_search()<CR>
+
+function! SearchOne(backward, inclusive, mode)
+	let c = GetChar()
+	let @/ = '\V' . (a:inclusive ? c : a:backward ? c . '\zs' : '\.\ze' . c)
+	return (a:mode ==# 'no' ? 'v' : '') . (a:backward ? 'N' : 'n')
+endfunction
+
 let g:last_cmd_type = ':'
 nnoremap : :call CommandLineEnter(':')<CR>:
 nnoremap / :call CommandLineEnter('/')<CR>/
 nnoremap ? :call CommandLineEnter('?')<CR>?
 
-function! CommandLineEnter(type)
-	let g:last_cmd_type = a:type
-	call SetHlSearch(0)
-	if a:type !=# ':'
-		autocmd HlSearch CursorMoved * call AfterSearch()
-	endif
-endfunction
+noremap <silent> <expr> t SearchOne(0, 0, mode(1))
+noremap <silent> <expr> f SearchOne(0, 1, mode(1))
+noremap <silent> <expr> T SearchOne(1, 0, mode(1))
+noremap <silent> <expr> F SearchOne(1, 1, mode(1))
 
-Map nov <expr> t SearchOne(0, 0)
-Map nov <expr> f SearchOne(0, 1)
-Map nov <expr> T SearchOne(1, 0)
-Map nov <expr> F SearchOne(1, 1)
+" Never map printable charcarters in select mode
+sunmap t
+sunmap f
+sunmap T
+sunmap F
 
-function! SearchOne(backward, inclusive)
-	let @/ = GetChar() . (a:inclusive ? '\zs' : '')
-	return a:backward ? 'N' : 'n'
-endfunction
+noremap <expr> <C-P> g:last_cmd_type . "\<Up>"
 
-Map nv <nosilent> <expr> <C-P> g:last_cmd_type . "\<Up>"
-
-" Clear screen
-Map o  <C-L> <C-\><C-N>:call Redraw()<CR>:call feedkeys(v:operator, 'n')<CR>
-Map nv <C-L> @=Redraw() ? '' : '' <CR>
-Map c  <C-L> <C-C>:call Redraw()<CR>@=g:last_cmd_type<CR><Up>
-Map i  <C-L> <C-O>:call Redraw()<CR>
-
+" Better Redraw
 function! Redraw()
 	call SetHlSearch(0)
 	diffupdate
 	redraw!
+	return ''
 endfunction
+
+" Ctrl-L clears search highlighting in all modes
+onoremap <silent> <C-L> <Esc>@=Redraw() . v:operator<CR>
+nnoremap <silent> <C-L> @=Redraw()<CR>
+vnoremap <silent> <C-L> @=Redraw()<CR>
+cnoremap <C-L> <C-C>:call Redraw()<CR>@=g:last_cmd_type<CR><Up>
+inoremap <C-L> <C-O>:call Redraw()<CR>
 
