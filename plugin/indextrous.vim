@@ -16,9 +16,11 @@ nnoremap <silent> g* g*:call <SID>after_search()<CR>
 nnoremap <silent> g# g#:call <SID>after_search()<CR>
 
 function! s:after_search()
-	if g:last_cmd_type ==# ':'
+	if s:did_after_search
 		return
 	endif
+	let s:did_after_search = 1
+
 	let after  = CountMatches(@/ . "\\%>'m")
 	let before = CountMatches(@/ . "\\%<'m")
 	call SetHlSearch(after + before < line('$'))
@@ -72,12 +74,12 @@ endfunction
 function! CommandLineEnter(type)
 	let g:last_cmd_type = a:type
 	call SetHlSearch(0)
+	let s:did_after_search = a:type ==# ':'
 endfunction
 
-cnoremap <CR> <CR>:call <SID>after_search()<CR>
-
+" TODO: suppress error messages, limit search range
 function! SearchOne(backward, inclusive, mode)
-	let c = GetChar()
+	let c = escape(GetChar(), '\')
 	let @/ = '\V' . (a:inclusive ? c : a:backward ? c . '\zs' : '\.\ze' . c)
 	return (a:mode ==# 'no' ? 'v' : '') . (a:backward ? 'N' : 'n')
 endfunction
@@ -86,6 +88,7 @@ let g:last_cmd_type = ':'
 nnoremap : :call CommandLineEnter(':')<CR>:
 nnoremap / :call CommandLineEnter('/')<CR>/
 nnoremap ? :call CommandLineEnter('?')<CR>?
+cnoremap <silent> <CR> <CR>:call <SID>after_search()<CR>
 
 noremap <silent> <expr> t SearchOne(0, 0, mode(1))
 noremap <silent> <expr> f SearchOne(0, 1, mode(1))
