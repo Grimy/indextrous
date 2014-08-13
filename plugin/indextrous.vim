@@ -8,23 +8,19 @@ cnoremap <expr> / getcmdtype() == '/' ? '\/' : '/'
 
 " Smart search highlighting
 " Enable highlighting before any search
-nnoremap <silent> *   *:call <SID>after_search()<CR>
-nnoremap <silent> #   #:call <SID>after_search()<CR>
-nnoremap <silent> n   n:call <SID>after_search()<CR>
-nnoremap <silent> N   N:call <SID>after_search()<CR>
-nnoremap <silent> g* g*:call <SID>after_search()<CR>
-nnoremap <silent> g# g#:call <SID>after_search()<CR>
+nnoremap <silent> *   *:call g:after_search()<CR>
+nnoremap <silent> #   #:call g:after_search()<CR>
+nnoremap <silent> n   n:call g:after_search()<CR>
+nnoremap <silent> N   N:call g:after_search()<CR>
+nnoremap <silent> g* g*:call g:after_search()<CR>
+nnoremap <silent> g# g#:call g:after_search()<CR>
 
-function! s:after_search()
-	if s:did_after_search
-		return
-	endif
-	let s:did_after_search = 1
-
+function! g:after_search()
 	let after  = CountMatches(@/ . "\\%>'m")
 	let before = CountMatches(@/ . "\\%<'m")
 	call SetHlSearch(after + before < line('$'))
 	call ReportMatches(before + 1, before + after)
+	return ""
 endfunction
 
 function! SetHlSearch(val)
@@ -53,13 +49,11 @@ function! CountMatches(pattern)
 endfunction
 
 function! ReportMatches(index, total)
-	if a:total == 0
-		" Don’t print anything
-	elseif a:total == 1
+	if a:total == 1
 		echo 'Only match'
 	elseif a:index == a:total
 		echo 'Last of' a:total 'matches'
-	else
+	elseif a:total != 0
 		echo Ordinal(a:index) 'of' a:total 'matches'
 	endif
 endfunction
@@ -74,36 +68,17 @@ endfunction
 function! CommandLineEnter(type)
 	let g:last_cmd_type = a:type
 	call SetHlSearch(0)
-	let s:did_after_search = a:type ==# ':'
-endfunction
-
-" TODO: suppress error messages, limit search range
-function! SearchOne(backward, inclusive, mode)
-	let c = escape(GetChar(), '\')
-	let @/ = '\V' . (a:inclusive ? c : a:backward ? c . '\zs' : '\.\ze' . c)
-	return (a:mode ==# 'no' ? 'v' : '') . (a:backward ? 'N' : 'n')
 endfunction
 
 let g:last_cmd_type = ':'
 nnoremap : :call CommandLineEnter(':')<CR>:
 nnoremap / :call CommandLineEnter('/')<CR>/
 nnoremap ? :call CommandLineEnter('?')<CR>?
-cnoremap <silent> <CR> <CR>:call <SID>after_search()<CR>
-
-noremap <silent> <expr> t SearchOne(0, 0, mode(1))
-noremap <silent> <expr> f SearchOne(0, 1, mode(1))
-noremap <silent> <expr> T SearchOne(1, 0, mode(1))
-noremap <silent> <expr> F SearchOne(1, 1, mode(1))
-
-" Never map printable charcarters in select mode
-sunmap t
-sunmap f
-sunmap T
-sunmap F
+cnoremap <silent><expr> <CR> getcmdtype() ==# ':' ? "\n" : "\n:call g:after_search()\n"
 
 noremap <expr> <C-P> g:last_cmd_type . "\<Up>"
 
-" Better Redraw
+" Ctrl-L clears search highlighting in all modes
 function! Redraw()
 	call SetHlSearch(0)
 	diffupdate
@@ -111,7 +86,6 @@ function! Redraw()
 	return ''
 endfunction
 
-" Ctrl-L clears search highlighting in all modes
 onoremap <silent> <C-L> <Esc>@=Redraw() . v:operator<CR>
 nnoremap <silent> <C-L> @=Redraw()<CR>
 vnoremap <silent> <C-L> @=Redraw()<CR>
