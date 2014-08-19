@@ -3,6 +3,8 @@
 " the terms of the Do What The Fuck You Want To Public License, Version 2, as
 " published by Sam Hocevar. See the LICENCE file for more details.
 
+" TODO: separate autoload file
+
 " Auto-escape '/' in search
 cnoremap <expr> / getcmdtype() == '/' ? '\/' : '/'
 
@@ -16,11 +18,10 @@ nnoremap <silent> g* g*:call g:after_search()<CR>
 nnoremap <silent> g# g#:call g:after_search()<CR>
 
 function! g:after_search()
-	let after  = CountMatches(@/ . "\\%>'m")
-	let before = CountMatches(@/ . "\\%<'m")
-	call SetHlSearch(after + before < line('$'))
+	let after  = CountMatches(@/ . '\V\%<''m\@!')
+	let before = CountMatches(@/ . '\V\%<''m')
+	call SetHlSearch(1)
 	call ReportMatches(before + 1, before + after)
-	return ""
 endfunction
 
 function! SetHlSearch(val)
