@@ -4,10 +4,12 @@
 " published by Sam Hocevar. See the LICENCE file for more details.
 
 function! indextrous#after_search()
-	let after  = indextrous#count_matches(@/ . '\V\%<''m\@!')
-	let before = indextrous#count_matches(@/ . '\V\%<''m')
+	normal! `'
+	let before = indextrous#count_matches(@/ . '\V\%>''''\@!')
+	let after  = indextrous#count_matches(@/ . '\V\%>''''')
 	call indextrous#set_hlsearch(1)
 	call indextrous#report_matches(before + 1, before + after)
+	normal! `'
 endfunction
 
 function! indextrous#redraw()
@@ -29,27 +31,20 @@ function! indextrous#set_hlsearch(val)
 endfunction
 
 function! indextrous#count_matches(pattern)
-	keepjumps normal! mm
 	redir => _
-	execute 'keepjumps keeppatterns silent %s/' . a:pattern . '/&/gen'
+	execute 'keepjumps keeppatterns silent! %s/' . a:pattern . '/&/gen'
 	redir END
-	keepjumps normal! `m
 	return str2nr(_[1:])
 endfunction
 
-function! indextrous#report_matches(index, total)
+let s:suffixes = ['th', 'st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th', 'th']
+
+function! indextrous#report_matches(i, total)
 	if a:total == 1
 		echo 'Only match'
-	elseif a:index == a:total
+	elseif a:i == a:total
 		echo 'Last of' a:total 'matches'
 	elseif a:total != 0
-		echo indextrous#ordinal(a:index) 'of' a:total 'matches'
+		echo a:i . s:suffixes[a:i % 100 / 10 == 1 ? 0 : a:i % 10] 'of' a:total 'matches'
 	endif
-endfunction
-
-function! indextrous#ordinal(n)
-	return a:n . (a:n % 100 / 10 == 1 ? 'th' :
-				\ a:n % 10 == 1 ? 'st' :
-				\ a:n % 10 == 2 ? 'nd' :
-				\ a:n % 10 == 3 ? 'rd' : 'th')
 endfunction
