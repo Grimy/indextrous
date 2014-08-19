@@ -3,8 +3,8 @@
 " the terms of the Do What The Fuck You Want To Public License, Version 2, as
 " published by Sam Hocevar. See the LICENCE file for more details.
 
-" Auto-escape '/' in search
-cnoremap <expr> / getcmdtype() == '/' ? '\/' : '/'
+" No errors when search wraps
+set shortmess+=s
 
 " Enable highlighting after any search
 nnoremap <silent> *   *:call indextrous#after_search()<CR>
