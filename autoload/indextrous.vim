@@ -3,31 +3,25 @@
 " the terms of the Do What The Fuck You Want To Public License, Version 2, as
 " published by Sam Hocevar. See the LICENCE file for more details.
 
-function! indextrous#after_search()
+function! indextrous#after()
 	normal! `'
 	let before = indextrous#count_matches(@/ . '\V\%>''''\@!')
 	let after  = indextrous#count_matches(@/ . '\V\%>''''')
-	call indextrous#set_hlsearch(1)
+	set hlsearch
+	augroup Indextrous
+		" Disable auto-highlighting when switching to another mode
+		autocmd InsertEnter,CursorMoved * set nohlsearch
+		autocmd InsertEnter,CursorMoved * autocmd! Indextrous
+	augroup END
 	call indextrous#report_matches(before + 1, before + after)
 	normal! `'
 endfunction
 
 function! indextrous#redraw()
-	call indextrous#set_hlsearch(0)
+	set nohlsearch
 	diffupdate
 	redraw!
 	return ''
-endfunction
-
-function! indextrous#set_hlsearch(val)
-	let &hlsearch = a:val
-	augroup Indextrous
-		autocmd! Indextrous
-		if &hlsearch
-			" Disable auto-highlighting when switching to another mode
-			autocmd InsertEnter,CursorMoved * call indextrous#set_hlsearch(0)
-		endif
-	augroup END
 endfunction
 
 function! indextrous#count_matches(pattern)

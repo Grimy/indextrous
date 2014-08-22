@@ -7,13 +7,13 @@
 set shortmess+=s
 
 " Enable highlighting after any search
-nnoremap <silent> *   *:call indextrous#after_search()<CR>
-nnoremap <silent> #   #:call indextrous#after_search()<CR>
-nnoremap <silent> n   n:call indextrous#after_search()<CR>
-nnoremap <silent> N   N:call indextrous#after_search()<CR>
-nnoremap <silent> g* g*:call indextrous#after_search()<CR>
-nnoremap <silent> g# g#:call indextrous#after_search()<CR>
-cnoremap <silent><expr> <CR> getcmdtype() =~# '[?/]' ? "\n:call indextrous#after_search()\n" : "\n"
+nnoremap <silent> *  :autocmd! Indextrous<CR>*: call indextrous#after()<CR>
+nnoremap <silent> #  :autocmd! Indextrous<CR>#: call indextrous#after()<CR>
+nnoremap <silent> n  :autocmd! Indextrous<CR>n: call indextrous#after()<CR>
+nnoremap <silent> N  :autocmd! Indextrous<CR>N: call indextrous#after()<CR>
+nnoremap <silent> g* :autocmd! Indextrous<CR>g*:call indextrous#after()<CR>
+nnoremap <silent> g# :autocmd! Indextrous<CR>g#:call indextrous#after()<CR>
+cnoremap <CR> <C-R>=getcmdtype()=~#'[?/]'&&feedkeys(":call indextrous#after()\n", 'n')<CR><BS><CR>
 
 " Ctrl-L clears the screen in all modes
 onoremap <silent> <C-L> <Esc>@=indextrous#redraw() . v:operator<CR>
