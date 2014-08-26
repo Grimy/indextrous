@@ -3,17 +3,14 @@
 " the terms of the Do What The Fuck You Want To Public License, Version 2, as
 " published by Sam Hocevar. See the LICENCE file for more details.
 
+" Disable auto-highlighting when switching to another mode
 function! indextrous#after()
 	normal! `'
 	let before = indextrous#count_matches(@/ . '\V\%>''''\@!')
 	let after  = indextrous#count_matches(@/ . '\V\%>''''')
-	set hlsearch
-	augroup Indextrous
-		" Disable auto-highlighting when switching to another mode
-		autocmd InsertEnter,CursorMoved * set nohlsearch
-		autocmd InsertEnter,CursorMoved * autocmd! Indextrous
-	augroup END
 	call indextrous#report_matches(before + 1, before + after)
+	set hlsearch
+	autocmd Indextrous InsertEnter,CursorMoved * set nohlsearch | echo | autocmd! Indextrous
 	normal! `'
 endfunction
 
