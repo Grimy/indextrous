@@ -11,7 +11,7 @@ function! indextrous#after()
 	call indextrous#report_matches(before + 1, before + after)
 	set hlsearch
 	autocmd Indextrous InsertEnter,CursorMoved * set nohlsearch | echo | autocmd! Indextrous
-	normal! `'
+	normal! `'zx
 endfunction
 
 function! indextrous#redraw()
