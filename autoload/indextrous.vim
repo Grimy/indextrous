@@ -4,7 +4,7 @@
 " published by Sam Hocevar. See the LICENCE file for more details.
 
 " Disable auto-highlighting when switching to another mode
-function! indextrous#after()
+function! indextrous#after() range
 	normal! `'
 	let before = indextrous#count_matches(@/ . '\V\%>''''\@!')
 	let after  = indextrous#count_matches(@/ . '\V\%>''''')
