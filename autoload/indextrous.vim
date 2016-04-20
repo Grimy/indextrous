@@ -4,7 +4,7 @@
 " published by Sam Hocevar. See the LICENCE file for more details.
 
 " Disable auto-highlighting when switching to another mode
-function! indextrous#after() range
+function! indextrous#after() range abort
 	normal! `'
 	let before = indextrous#count_matches(@/ . '\V\%>''''\@!')
 	let after  = indextrous#count_matches(@/ . '\V\%>''''')
@@ -12,16 +12,17 @@ function! indextrous#after() range
 	set hlsearch
 	autocmd Indextrous InsertEnter,CursorMoved * set nohlsearch | echo | autocmd! Indextrous
 	normal! `'zx
+	return ''
 endfunction
 
-function! indextrous#redraw()
+function! indextrous#redraw() abort
 	set nohlsearch
 	diffupdate
 	redraw!
 	return ''
 endfunction
 
-function! indextrous#count_matches(pattern)
+function! indextrous#count_matches(pattern) abort
 	redir => _
 	execute 'keepjumps keeppatterns silent! %s/' . a:pattern . '/&/en' . (&gdefault ? '' : 'g')
 	redir END
@@ -30,7 +31,7 @@ endfunction
 
 let s:suffixes = ['th', 'st', 'nd', 'rd', 'th', 'th', 'th', 'th', 'th', 'th']
 
-function! indextrous#report_matches(i, total)
+function! indextrous#report_matches(i, total) abort
 	if a:total == 1
 		echo 'Only match'
 	elseif a:i == a:total

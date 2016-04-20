@@ -16,6 +16,8 @@ nnoremap <silent> N  :autocmd! Indextrous<CR>N: call indextrous#after()<CR>
 nnoremap <silent> g* :autocmd! Indextrous<CR>g*:call indextrous#after()<CR>
 nnoremap <silent> g# :autocmd! Indextrous<CR>g#:call indextrous#after()<CR>
 cnoremap <expr> <CR> getcmdtype()=~#'[?/]' ? "\n:call indextrous#after()\n" : "\n"
+cnoremap <expr> <CR> getcmdtype() =~#'[?/]' && v:operator !=# 'c' ?
+	\ "\n:call indextrous#after()\n" : "\n"
 
 " Ctrl-L clears the screen in all modes
 onoremap <silent> <C-L> <Esc>@=indextrous#redraw() . v:operator<CR>
